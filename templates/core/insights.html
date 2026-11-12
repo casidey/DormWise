@@ -1,0 +1,66 @@
+{% extends "app_base.html" %}
+{% load money %}
+{% block title %}Spending insights | DormWise{% endblock %}
+{% block content %}
+<div class="flex flex-wrap items-center justify-between gap-4">
+  <h1 class="page-title" data-rise>Where your baon went</h1>
+  <nav aria-label="Time range" class="seg seg-scroll max-w-full">
+    <a href="?range=period" {% if mode == 'period' %}aria-current="true"{% endif %}>This period</a>
+    <a href="?range=30" {% if mode == '30' %}aria-current="true"{% endif %}>Last 30 days</a>
+    <a href="?range=month" {% if mode == 'month' %}aria-current="true"{% endif %}>By month</a>
+  </nav>
+</div>
+
+<section aria-label="Summary" class="grid gap-5 md:grid-cols-[2fr_1fr_1fr]">
+  <div class="card card-yellow card-pop" data-rise>
+    <div class="font-semibold">Spent, {{ start|date:"M j" }} to {{ today|date:"M j" }}</div>
+    <div class="mono mt-0.5 text-[40px] tracking-[-0.04em] sm:text-[52px]" data-count="{{ total|plain }}">{{ total|peso }}</div>
+    <div class="mt-1.5">{{ headline|default:"Log a few expenses to see where it goes." }}</div>
+  </div>
+  <div class="card" data-rise>
+    <div class="font-semibold text-muted">Daily average</div>
+    <div class="mono mt-1.5 text-[34px]">{{ average|peso }}</div>
+  </div>
+  <div class="card card-cobalt" data-rise>
+    <div class="font-semibold text-on-cobalt-soft">Days over your limit</div>
+    <div class="mono mt-1.5 text-[34px]">{{ over_days }} of {{ tracked_days }}</div>
+  </div>
+</section>
+
+{% if categories %}
+<div class="grid items-stretch gap-5 lg:grid-cols-[3fr_2fr]">
+  <section aria-labelledby="cat" class="card" data-rise>
+    <h2 id="cat" class="card-title">By category</h2>
+    <div class="mt-[18px] flex flex-col gap-3.5" data-hbars>
+      {% for row in categories %}
+      <div class="flex items-center gap-3.5">
+        <span class="w-[104px] flex-none font-semibold sm:w-[120px]">{{ row.label }}</span>
+        <div class="min-w-0 flex-auto"><div class="hbar {% if row.top %}hbar-top{% endif %}" style="--pct: {{ row.pct }}"></div></div>
+        <span class="mono w-[84px] flex-none text-right">{{ row.amount|peso0 }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section aria-labelledby="wk" class="card flex flex-col" data-rise>
+    <h2 id="wk" class="card-title">{% if by_month %}By month{% else %}By week{% endif %}</h2>
+    <div role="img" aria-label="{% for bar in bars %}{{ bar.label }}: {{ bar.amount|peso0 }}. {% endfor %}" class="mt-[18px] flex min-h-[220px] flex-auto items-end gap-3" data-vbars>
+      {% for bar in bars %}
+      <div class="flex flex-1 flex-col items-center gap-1.5">
+        <span class="mono text-[13px]">{{ bar.amount|floatformat:"0g" }}</span>
+        <div class="vbar {% if bar.current %}vbar-now{% endif %}" style="--pct: {{ bar.pct }}"></div>
+        <span class="text-[13px] font-semibold">{{ bar.label }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <p class="mt-3.5 text-[15px] text-muted">The yellow bar is the current {% if by_month %}month{% else %}week{% endif %} so far.</p>
+  </section>
+</div>
+{% else %}
+<div class="card card-dashed text-center" data-rise>
+  <p class="text-lg font-bold">No spending in {{ title }} yet.</p>
+  <p class="mt-1 text-muted">Charts by category and by week show up after your first expense.</p>
+  <a href="{% url 'expenses' %}#add" class="btn btn-primary btn-pop mt-4">Add expense</a>
+</div>
+{% endif %}
+{% endblock %}

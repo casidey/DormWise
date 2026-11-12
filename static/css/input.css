@@ -1,0 +1,637 @@
+/*
+  DormWise "Sticker Pop" styles. Tailwind CSS v4.
+
+  Build:  npm run css          (or the standalone CLI:
+          tailwindcss -i static/css/input.css -o static/css/output.css --minify)
+  Watch:  npm run css:watch
+*/
+@import "tailwindcss";
+@source "../../templates";
+@source "../js";
+
+/* ---------- Fonts (self-hosted) ---------- */
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("../fonts/bricolage-grotesque-latin-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+    U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+    U+2212, U+2215, U+FEFF, U+FFFD;
+}
+/* latin-ext carries the peso sign (U+20B1). */
+@font-face {
+  font-family: "Bricolage Grotesque";
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url("../fonts/bricolage-grotesque-latin-ext-wght-normal.woff2") format("woff2-variations");
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+    U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+    U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "DM Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/dm-mono-latin-400-normal.woff2") format("woff2");
+}
+@font-face {
+  font-family: "DM Mono";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("../fonts/dm-mono-latin-500-normal.woff2") format("woff2");
+}
+
+/* ---------- Brand tokens ---------- */
+@theme {
+  --color-*: initial;
+  --color-ink: #121633;
+  --color-paper: #f3f4f8;
+  --color-card: #fffffe;
+  --color-yellow: #ffd447;
+  --color-yellow-soft: #ffe9a3;
+  --color-cobalt: #2d46d6;
+  --color-cobalt-hover: #1e31a6;
+  --color-lavender: #dde2ff;
+  --color-muted: #3a3f63;
+  --color-hint: #4a4f72;      /* helper text on white */
+  --color-on-cobalt: #f5f6ff; /* text on cobalt */
+  --color-on-cobalt-soft: #d5dbff;
+  --color-on-ink-soft: #c9cce3;
+
+  --font-sans: "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  /* DM Mono has no peso glyph, so the sign falls through to Bricolage. */
+  --font-mono: "DM Mono", "Bricolage Grotesque", ui-monospace, monospace;
+
+  --radius-card: 26px;
+  --radius-tile: 20px;
+  --radius-row: 16px;
+  --radius-input: 14px;
+
+  --shadow-pop: 6px 6px 0 0 #121633;
+  --shadow-pop-sm: 4px 4px 0 0 #121633;
+
+  --ease-pop: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    overflow-x: clip;
+  }
+  a {
+    color: var(--color-cobalt);
+  }
+  a:hover {
+    color: var(--color-cobalt-hover);
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-cobalt);
+    outline-offset: 3px;
+  }
+  [id] {
+    scroll-margin-top: 1.5rem;
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .wrap {
+    width: 100%;
+    max-width: 1200px;
+    margin-inline: auto;
+    padding-inline: 16px;
+  }
+  @media (min-width: 640px) {
+    .wrap {
+      padding-inline: 24px;
+    }
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+  }
+  .page-title {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  @media (min-width: 640px) {
+    .page-title {
+      font-size: 36px;
+    }
+  }
+  .card-title {
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1.2;
+  }
+  .big-money {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+    font-size: clamp(40px, 11vw, 64px);
+  }
+
+  /* ---------- Cards ---------- */
+  .card {
+    background: var(--color-card);
+    border: 2px solid var(--color-ink);
+    border-radius: var(--radius-card);
+    padding: 20px;
+    min-width: 0;
+  }
+  @media (min-width: 640px) {
+    .card {
+      padding: 24px;
+    }
+  }
+  .card-pop {
+    box-shadow: var(--shadow-pop);
+  }
+  .card-yellow {
+    background: var(--color-yellow);
+  }
+  .card-soft {
+    background: var(--color-yellow-soft);
+  }
+  .card-lav {
+    background: var(--color-lavender);
+  }
+  .card-cobalt {
+    background: var(--color-cobalt);
+    color: var(--color-on-cobalt);
+  }
+  .card-cobalt a:not(.btn) {
+    color: var(--color-on-cobalt);
+  }
+  .card-ink {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .card-dashed {
+    border-style: dashed;
+  }
+  .tile {
+    background: var(--color-card);
+    border: 2px solid var(--color-ink);
+    border-radius: var(--radius-tile);
+    padding: 16px 18px;
+    min-width: 0;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    border-radius: var(--radius-row);
+    background: var(--color-paper);
+  }
+  .note {
+    padding: 14px 16px;
+    border-radius: var(--radius-row);
+    font-size: 16px;
+    line-height: 1.5;
+  }
+  .note-ok {
+    background: var(--color-lavender);
+  }
+  .note-warn {
+    background: var(--color-yellow-soft);
+    border: 2px solid var(--color-ink);
+  }
+  .note-alert {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .note-alert a {
+    color: var(--color-yellow);
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 10px 20px;
+    border: 2px solid var(--color-ink);
+    border-radius: 9999px;
+    background: var(--color-card);
+    color: var(--color-ink);
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.1;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 140ms var(--ease-pop), box-shadow 140ms var(--ease-pop);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn:hover {
+    color: var(--color-ink);
+  }
+  .btn:active {
+    transform: translate(1px, 1px);
+  }
+  .btn-pop {
+    box-shadow: var(--shadow-pop-sm);
+  }
+  .btn-pop:hover {
+    transform: translate(2px, 2px);
+    box-shadow: 2px 2px 0 0 var(--color-ink);
+  }
+  .btn-pop:active {
+    transform: translate(4px, 4px);
+    box-shadow: 0 0 0 0 var(--color-ink);
+  }
+  .btn-primary {
+    background: var(--color-cobalt);
+    color: var(--color-on-cobalt);
+  }
+  .btn-primary:hover {
+    background: var(--color-cobalt-hover);
+    color: var(--color-on-cobalt);
+  }
+  .btn-dark {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .btn-dark:hover {
+    color: var(--color-paper);
+  }
+  .btn-yellow {
+    background: var(--color-yellow);
+  }
+  .btn-clear {
+    background: transparent;
+  }
+  .btn-on-cobalt {
+    background: transparent;
+    border-color: var(--color-on-cobalt);
+    color: var(--color-on-cobalt);
+  }
+  .btn-on-cobalt:hover {
+    color: var(--color-on-cobalt);
+  }
+  .btn-dashed {
+    background: transparent;
+    border-style: dashed;
+  }
+  .btn-sm {
+    padding: 8px 16px;
+    font-size: 15px;
+  }
+  .btn-lg {
+    padding: 14px 26px;
+    font-size: 17px;
+  }
+  .btn-block {
+    display: flex;
+    width: 100%;
+  }
+  .link {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  /* ---------- Chips (radio and checkbox pills) ---------- */
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    position: relative;
+    display: inline-flex;
+    cursor: pointer;
+  }
+  .chip input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .chip > span,
+  .chip-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 8px 16px;
+    border: 2px solid var(--color-ink);
+    border-radius: 9999px;
+    background: var(--color-card);
+    color: var(--color-ink);
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 140ms var(--ease-pop);
+  }
+  .chip input:checked + span:not(.plan-card):not(.option),
+  .chip-link[aria-current="true"],
+  .chip-btn[aria-pressed="true"] {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .chip input:focus-visible + span {
+    outline: 3px solid var(--color-cobalt);
+    outline-offset: 3px;
+  }
+  .chip:active span {
+    transform: scale(0.96);
+  }
+  .chip-btn {
+    min-height: 44px;
+    padding: 8px 18px;
+    border: 2px solid var(--color-ink);
+    border-radius: 9999px;
+    background: var(--color-card);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  /* Segmented pill: app nav, account tabs, time range. */
+  .seg {
+    display: flex;
+    gap: 4px;
+    padding: 5px;
+    border: 2px solid var(--color-ink);
+    border-radius: 9999px;
+    background: var(--color-card);
+  }
+  .seg a,
+  .seg button {
+    padding: 8px 14px;
+    border: 0;
+    border-radius: 9999px;
+    background: transparent;
+    color: var(--color-muted);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .seg a[aria-current="page"],
+  .seg a[aria-current="true"],
+  .seg button[aria-selected="true"] {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+  .seg-scroll {
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .seg-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 12px;
+    border-radius: 9999px;
+    background: var(--color-paper);
+    font-size: 14px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .tag-warn {
+    background: var(--color-yellow-soft);
+  }
+  .tag-line {
+    border: 2px solid var(--color-ink);
+  }
+  .tag-dark {
+    background: var(--color-ink);
+    color: var(--color-paper);
+    border: 2px solid var(--color-ink);
+  }
+
+  /* ---------- Forms: label above, helper and error below ---------- */
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+  }
+  .label,
+  legend.label {
+    font-size: 15px;
+    font-weight: 600;
+    padding: 0;
+  }
+  .input {
+    width: 100%;
+    height: 50px;
+    padding: 0 14px;
+    border: 2px solid var(--color-ink);
+    border-radius: var(--radius-input);
+    background: var(--color-card);
+    color: var(--color-ink);
+    font: inherit;
+    font-size: 16px;
+  }
+  .input-mono {
+    font-family: var(--font-mono);
+    font-size: 18px;
+  }
+  .input-xl {
+    height: 60px;
+    font-size: 26px;
+  }
+  .input:focus-visible {
+    outline: 3px solid var(--color-cobalt);
+    outline-offset: 2px;
+  }
+  .has-error .input {
+    background: var(--color-yellow-soft);
+    box-shadow: 0 0 0 2px var(--color-ink);
+  }
+  .help {
+    font-size: 14px;
+    color: var(--color-hint);
+  }
+  .card-cobalt .help {
+    color: var(--color-on-cobalt-soft);
+  }
+  .card-yellow .help {
+    color: var(--color-muted);
+  }
+  .error {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 44px;
+    font-size: 16px;
+  }
+  .check input {
+    width: 22px;
+    height: 22px;
+    flex: none;
+    accent-color: var(--color-cobalt);
+  }
+
+  /* ---------- Shell ---------- */
+  .skip-link {
+    position: absolute;
+    left: 1rem;
+    top: -4rem;
+    z-index: 50;
+    padding: 0.6rem 1rem;
+    border: 2px solid var(--color-ink);
+    border-radius: 9999px;
+    background: var(--color-yellow);
+    color: var(--color-ink);
+    font-weight: 700;
+  }
+  .skip-link:focus {
+    top: 0.75rem;
+  }
+  .avatar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    border: 2px solid var(--color-ink);
+    border-radius: 9999px;
+    background: var(--color-lavender);
+    color: var(--color-ink);
+    font-size: 15px;
+    font-weight: 800;
+    text-decoration: none;
+  }
+  .toast {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    border: 2px solid var(--color-ink);
+    border-radius: var(--radius-row);
+    background: var(--color-card);
+    font-weight: 600;
+  }
+  .toast-success {
+    background: var(--color-lavender);
+  }
+  .toast-warning,
+  .toast-error {
+    background: var(--color-yellow-soft);
+  }
+
+  /* Bars (insights). Height and width come from --pct. */
+  .hbar {
+    height: 26px;
+    width: calc(var(--pct) * 1%);
+    border: 2px solid var(--color-ink);
+    border-radius: 8px;
+    background: var(--color-yellow);
+    transform-origin: left center;
+  }
+  .hbar-top {
+    background: var(--color-cobalt);
+  }
+  .vbar {
+    width: 100%;
+    height: calc(var(--pct) * 1.7px);
+    border: 2px solid var(--color-ink);
+    border-radius: 10px 10px 4px 4px;
+    background: var(--color-cobalt);
+    transform-origin: center bottom;
+  }
+  .vbar-now {
+    background: var(--color-yellow);
+  }
+
+  .bubble {
+    max-width: 230px;
+    padding: 12px 14px;
+    border: 2px solid var(--color-ink);
+    border-radius: 20px 20px 6px 20px;
+    background: var(--color-card);
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+    transform: rotate(-2deg);
+  }
+  .plan-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    padding: 24px;
+    border: 2px solid var(--color-ink);
+    border-radius: var(--radius-card);
+    background: var(--color-card);
+    transition: transform 160ms var(--ease-pop), box-shadow 160ms var(--ease-pop);
+  }
+  .pick {
+    position: relative;
+    display: block;
+    cursor: pointer;
+  }
+  .pick input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .pick input:disabled {
+    cursor: not-allowed;
+  }
+  .pick input:disabled + .plan-card {
+    opacity: 0.6;
+  }
+  .pick input:checked + .plan-card {
+    background: var(--color-yellow);
+    color: var(--color-ink);
+    box-shadow: var(--shadow-pop);
+  }
+  .pick input:focus-visible + .plan-card,
+  .pick input:focus-visible + .option {
+    outline: 3px solid var(--color-cobalt);
+    outline-offset: 3px;
+  }
+  .option {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--color-ink);
+    border-radius: 18px;
+    background: var(--color-card);
+    font-size: 16px;
+  }
+  .pick input:checked + .option {
+    background: var(--color-lavender);
+    color: var(--color-ink);
+  }
+}

@@ -1,0 +1,124 @@
+{% extends "app_base.html" %}
+{% load money %}
+{% block title %}Home | DormWise{% endblock %}
+{% block content %}
+<h1 class="page-title" data-rise>Hi {{ first_name }}. {{ budget.days_left }} day{{ budget.days_left|pluralize }} to go.</h1>
+
+{% if budget.allowance_due %}
+<section class="card card-soft flex flex-wrap items-center justify-between gap-4" data-rise>
+  <p class="text-[17px]"><strong>It's allowance day.</strong> Did your allowance arrive?</p>
+  <div class="flex flex-wrap gap-2.5">
+    <a href="{% url 'setup' %}" class="btn btn-dark">Yes, start a new plan</a>
+    <a href="{% url 'allowance' %}#sched" class="btn">It's late, move the date</a>
+  </div>
+</section>
+{% endif %}
+{% if budget.shortfall %}
+<p class="note note-alert" role="alert" data-rise><strong>Shortfall warning.</strong> Your money can't cover the {{ budget.floor|peso }} daily essentials until {{ budget.period.next_allowance_on|date:"M j" }}. <a href="{% url 'allowance' %}">Check your allowance</a> or <a href="{% url 'bills' %}">your bills</a>.</p>
+{% endif %}
+{% for bill in due_soon %}
+<p class="note note-warn" data-rise><strong>{{ bill.title }}</strong> ({{ bill.amount|peso }}) is due {{ bill.due_date|date:"D, M j" }}. It is already set aside. <a href="{% url 'bills' %}" class="font-bold">Open bills</a></p>
+{% endfor %}
+
+<div class="flex flex-wrap items-stretch gap-6">
+  <section aria-labelledby="today" class="card card-yellow card-pop min-w-0 flex-[3_1_440px] !rounded-[28px] sm:!p-7" data-rise>
+    <h2 id="today" class="text-[17px] font-semibold">Today you can spend</h2>
+    <div class="big-money mt-0.5" data-count="{{ budget.limit_today|plain }}">{{ budget.limit_today|peso }}</div>
+    <div class="text-[17px] font-semibold">
+      {{ budget.spent_today|peso }} spent,
+      {% if budget.left_today < 0 %}{{ budget.over_today|peso }} over{% else %}{{ budget.left_today|peso }} left{% endif %}
+    </div>
+
+    <div class="mt-[22px] rounded-[20px] border-2 border-ink bg-card p-[18px]">
+      <div class="flex items-center gap-3.5">
+        {% include "partials/barya.html" with size=76 mood=mood %}
+        <p class="leading-normal">
+          {% if budget.incident %}<strong>{% if budget.incident.is_today %}Today{% else %}Yesterday{% endif %} went {{ budget.incident.over|peso }} over.</strong>{% endif %}
+          {{ barya_line }}
+        </p>
+      </div>
+      {% if budget.incident %}
+      <form method="post" action="{% url 'choose_plan' %}" role="group" aria-label="Recovery plan" class="mt-3.5 flex flex-wrap items-center gap-2.5">
+        {% csrf_token %}
+        <button name="plan" value="even" class="chip-btn" aria-pressed="{% if not budget.needs_plan and budget.plan == 'even' %}true{% else %}false{% endif %}">Little by little</button>
+        <button name="plan" value="fast" class="chip-btn" aria-pressed="{% if not budget.needs_plan and budget.plan == 'fast' %}true{% else %}false{% endif %}" {% if not budget.previews.fast.ok %}disabled title="Not enough room above your essentials floor"{% endif %}>Fix it by Friday</button>
+        <a href="{% url 'recovery' %}" class="link ml-1">See full plan</a>
+      </form>
+      {% endif %}
+      <div class="mt-4 grid grid-cols-[repeat(auto-fill,minmax(62px,1fr))] gap-1.5" data-days>
+        {% for day in preview.days %}
+        <div class="rounded-[14px] border-2 border-ink px-1.5 py-2 text-center {% if day.is_today %}bg-yellow{% elif day.tight %}bg-yellow-soft{% else %}bg-paper{% endif %}">
+          <div class="text-[13px] font-semibold">{{ day.label }}</div>
+          <div class="mono mt-0.5 text-sm">{{ day.amount|peso0 }}</div>
+        </div>
+        {% endfor %}
+      </div>
+      <p class="mt-3 text-[15px] text-muted">{{ preview.note }}</p>
+    </div>
+  </section>
+
+  <div class="flex min-w-0 flex-[2_1_300px] flex-col gap-6">
+    <section aria-labelledby="dorm" class="card card-cobalt card-pop !rounded-[28px]" data-rise>
+      {% if group %}
+      <div class="flex items-baseline justify-between gap-3">
+        <h2 id="dorm" class="card-title">{{ group.name }}</h2>
+        <a href="{% url 'dorm' %}" class="link">Open group</a>
+      </div>
+      <div class="mt-3.5 flex flex-col gap-2.5">
+        {% for row in budget.owed_me %}<div class="flex justify-between gap-3"><span>{{ row.by.first_name }} owes you</span><span class="mono">{{ row.amount|peso }}</span></div>{% endfor %}
+        {% for row in budget.i_owe %}<div class="flex justify-between gap-3"><span>You owe {{ row.to.first_name }}</span><span class="mono">{{ row.amount|peso }}</span></div>{% endfor %}
+        {% if not budget.owed_me and not budget.i_owe %}<p class="text-on-cobalt-soft">All settled. Nobody owes anybody.</p>{% endif %}
+      </div>
+      <div class="mt-[18px] flex flex-wrap gap-2.5">
+        {% for row in budget.i_owe|slice:":1" %}
+        <form method="post" action="{% url 'share_repay' row.share.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{% url 'dashboard' %}"><button class="btn btn-yellow btn-sm">Pay {{ row.to.first_name }}</button></form>
+        {% endfor %}
+        {% for row in budget.owed_me|slice:":1" %}
+          {% if row.pending %}<a href="{% url 'bills' %}" class="btn btn-on-cobalt btn-sm">Confirm {{ row.by.first_name }}'s payment</a>
+          {% else %}<form method="post" action="{% url 'remind' row.by.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{% url 'dashboard' %}"><button class="btn btn-on-cobalt btn-sm">Remind {{ row.by.first_name }}</button></form>{% endif %}
+        {% endfor %}
+      </div>
+      {% else %}
+      <h2 id="dorm" class="card-title">No dorm group yet</h2>
+      <p class="mt-2 text-on-cobalt-soft">Create one or join with an invite code to split bills with roommates.</p>
+      <a href="{% url 'dorm' %}" class="btn btn-yellow btn-sm mt-4">Set up My Dorm</a>
+      {% endif %}
+    </section>
+
+    <section aria-labelledby="pocket" class="card !rounded-[28px]" data-rise>
+      <div class="flex items-baseline justify-between gap-3">
+        <h2 id="pocket" class="card-title">Your pockets</h2>
+        <a href="{% url 'allowance' %}" class="link">Allowance</a>
+      </div>
+      <div class="mt-3.5 flex flex-col gap-2.5">
+        <div class="flex justify-between"><span>Spendable</span><span class="mono">{{ budget.spendable|peso }}</span></div>
+        <div class="flex justify-between"><span>Set aside for bills</span><span class="mono">{{ budget.set_aside|peso }}</span></div>
+        <div class="flex justify-between"><span>Savings</span><span class="mono">{{ budget.savings|peso }}</span></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<section aria-labelledby="soon" data-rise>
+  <div class="flex items-baseline justify-between gap-3">
+    <h2 id="soon" class="text-2xl font-extrabold">Coming up before {{ budget.period.next_allowance_on|date:"M j" }}</h2>
+    <a href="{% url 'bills' %}" class="link">All bills</a>
+  </div>
+  {% if coming_up %}
+  <div class="mt-3.5 flex gap-3.5 overflow-x-auto px-1 pb-2.5 pt-1">
+    {% for item in coming_up %}
+    <div class="tile flex-[0_0_220px] !rounded-[22px] !p-[18px]">
+      <div class="text-sm font-semibold text-muted">{{ item.when }}</div>
+      <div class="mt-1 text-lg font-bold">{{ item.title }}</div>
+      <div class="mono mt-2 text-[22px]">{{ item.amount|peso }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="card card-dashed mt-3.5 flex flex-wrap items-center justify-between gap-3">
+    <p class="text-muted">Nothing due before your next allowance. Add rent, Wi-Fi or water so they are set aside first.</p>
+    <a href="{% url 'bills' %}" class="btn btn-sm">Add a bill</a>
+  </div>
+  {% endif %}
+</section>
+{% endblock %}

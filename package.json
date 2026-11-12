@@ -1,0 +1,17 @@
+{
+  "name": "dormwise",
+  "private": true,
+  "scripts": {
+    "vendor": "mkdir -p static/vendor && cp node_modules/gsap/dist/gsap.min.js node_modules/gsap/dist/ScrollTrigger.min.js static/vendor/",
+    "postinstall": "npm run vendor",
+    "css": "npx @tailwindcss/cli -i static/css/input.css -o static/css/output.css --minify",
+    "css:watch": "npx @tailwindcss/cli -i static/css/input.css -o static/css/output.css --watch"
+  },
+  "dependencies": {
+    "gsap": "^3.15.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.3.5",
+    "tailwindcss": "^4.3.5"
+  }
+}

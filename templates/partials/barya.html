@@ -1,0 +1,35 @@
+{# Barya, the peso coin mascot. mood: happy | oops | proud. wave=True raises the right arm. #}
+<svg viewBox="0 0 240 240" width="{{ size|default:140 }}" height="{{ size|default:140 }}" class="barya block flex-none" data-barya="{{ mood|default:'happy' }}"
+  {% if label %}role="img" aria-label="{{ label }}"{% else %}aria-hidden="true"{% endif %}>
+  <g stroke="#121633" stroke-width="4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M 48 150 Q 22 148 22 124" fill="none"/>
+    <circle cx="22" cy="118" r="8" fill="#FFD447"/>
+    <g class="barya-arm">
+      {% if wave %}<path d="M 192 124 Q 224 108 218 78" fill="none"/><circle cx="218" cy="72" r="8" fill="#FFD447"/>
+      {% else %}<path d="M 192 150 Q 218 148 218 124" fill="none"/><circle cx="218" cy="118" r="8" fill="#FFD447"/>{% endif %}
+    </g>
+    <path d="M 100 204 L 96 222" fill="none"/>
+    <path d="M 140 204 L 144 222" fill="none"/>
+    <ellipse cx="91" cy="225" rx="12" ry="6" fill="#121633"/>
+    <ellipse cx="149" cy="225" rx="12" ry="6" fill="#121633"/>
+    <circle cx="120" cy="128" r="80" fill="#FFD447"/>
+    <circle cx="120" cy="128" r="67" fill="none" stroke-width="3" stroke-dasharray="1 10"/>
+    <path d="M 68 98 Q 76 72 102 62" fill="none" stroke="#FFFFFE" stroke-width="7"/>
+  </g>
+  <text x="120" y="104" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="30" fill="#121633">₱</text>
+  {% if mood != 'oops' %}<g><ellipse cx="88" cy="148" rx="9" ry="5" fill="#FF8F7A" opacity="0.6"/><ellipse cx="152" cy="148" rx="9" ry="5" fill="#FF8F7A" opacity="0.6"/></g>{% endif %}
+  {% if mood == 'proud' %}
+  <path d="M 92 133 Q 100 123 108 133 M 132 133 Q 140 123 148 133" fill="none" stroke="#121633" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M 106 150 Q 120 172 134 150 Z" fill="#121633" stroke="#121633" stroke-width="4" stroke-linejoin="round"/>
+  <g class="barya-sparkles"><path d="M 34 43 Q 34 54 45 54 Q 34 54 34 65 Q 34 54 23 54 Q 34 54 34 43 Z" fill="#FFFFFE" stroke="#121633" stroke-width="3" stroke-linejoin="round"/><path d="M 208 36 Q 208 44 216 44 Q 208 44 208 52 Q 208 44 200 44 Q 208 44 208 36 Z" fill="#FFFFFE" stroke="#121633" stroke-width="3" stroke-linejoin="round"/><path d="M 212 187 Q 212 196 221 196 Q 212 196 212 205 Q 212 196 203 196 Q 212 196 212 187 Z" fill="#FFFFFE" stroke="#121633" stroke-width="3" stroke-linejoin="round"/></g>
+  {% else %}
+  <g class="barya-eyes"><ellipse cx="100" cy="130" rx="7" ry="9" fill="#121633"/><ellipse cx="140" cy="130" rx="7" ry="9" fill="#121633"/><circle cx="102" cy="127" r="2.6" fill="#FFFFFE"/><circle cx="142" cy="127" r="2.6" fill="#FFFFFE"/></g>
+    {% if mood == 'oops' %}
+  <path d="M 91 116 L 107 111 M 133 111 L 149 116" fill="none" stroke="#121633" stroke-width="4" stroke-linecap="round"/>
+  <path d="M 109 157 Q 115 151 120 156 Q 125 161 131 155" fill="none" stroke="#121633" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <path class="barya-sweat" d="M 194 66 Q 203 79 194 84 Q 185 79 194 66 Z" fill="#BFE3FF" stroke="#121633" stroke-width="3" stroke-linejoin="round"/>
+    {% else %}
+  <path d="M 108 152 Q 120 165 132 152" fill="none" stroke="#121633" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    {% endif %}
+  {% endif %}
+</svg>

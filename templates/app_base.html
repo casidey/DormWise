@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block body %}
+{% with here=request.resolver_match.url_name %}
+<header class="wrap flex flex-wrap items-center justify-between gap-x-4 gap-y-3 py-4">
+  <a href="{% url 'dashboard' %}" class="flex items-center gap-2.5 text-ink no-underline hover:text-ink">
+    {% include "partials/logo.html" with size=38 %}
+    <span class="text-[19px] font-extrabold">DormWise</span>
+  </a>
+  <div class="order-3 w-full lg:order-none lg:w-auto">
+    <nav aria-label="App" class="seg seg-scroll">
+      <a href="{% url 'dashboard' %}" {% if here == 'dashboard' %}aria-current="page"{% endif %}>Home</a>
+      <a href="{% url 'expenses' %}" {% if here == 'expenses' or here == 'expense_edit' %}aria-current="page"{% endif %}>Spending</a>
+      <a href="{% url 'recovery' %}" {% if here == 'recovery' %}aria-current="page"{% endif %}>Recovery</a>
+      <a href="{% url 'dorm' %}" {% if here == 'dorm' %}aria-current="page"{% endif %}>Dorm</a>
+      <a href="{% url 'bills' %}" {% if here == 'bills' %}aria-current="page"{% endif %}>Bills</a>
+      <a href="{% url 'insights' %}" {% if here == 'insights' %}aria-current="page"{% endif %}>Insights</a>
+    </nav>
+  </div>
+  <div class="flex items-center gap-2.5">
+    <a href="{% url 'expenses' %}#add" class="btn btn-primary btn-pop">Add expense</a>
+    <a href="{% url 'settings' %}" aria-label="Profile and settings" class="avatar">{{ profile.initials }}</a>
+  </div>
+</header>
+
+<main id="main" class="wrap flex flex-col gap-6 pb-16 pt-2">
+  {% if messages or alerts %}
+  <div class="flex flex-col gap-2" aria-live="polite">
+    {% for message in messages %}
+    <p class="toast toast-{{ message.tags }}" data-toast>{{ message }}</p>
+    {% endfor %}
+    {% for alert in alerts %}
+    <form method="post" action="{% url 'dismiss_alert' alert.pk %}" class="toast">
+      {% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}">
+      <span>{{ alert.message }}</span>
+      <button class="btn btn-sm" aria-label="Dismiss: {{ alert.message }}">Got it</button>
+    </form>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% block content %}{% endblock %}
+</main>
+{% endwith %}
+{% endblock %}

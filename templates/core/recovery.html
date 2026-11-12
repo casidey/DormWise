@@ -1,0 +1,121 @@
+{% extends "app_base.html" %}
+{% load money %}
+{% block title %}Budget recovery | DormWise{% endblock %}
+{% block content %}
+<div class="flex flex-wrap items-end justify-between gap-6">
+  <div class="min-w-0 flex-[1_1_420px]" data-rise>
+    <h1 class="text-[32px] font-extrabold leading-[1.1] tracking-[-0.03em] sm:text-[40px]">{% if incident %}Let's get you back on track.{% else %}You're on track.{% endif %}</h1>
+    <p class="mt-2.5 max-w-[60ch] text-lg text-muted">
+      {% if incident %}{% if incident.is_today %}Today{% else %}{{ incident.day|date:"l" }}{% endif %} went over your limit. Pick how the rest of this allowance should absorb it.
+      {% else %}No day has gone over since your last plan. This is how the rest of your allowance looks.{% endif %}
+    </p>
+  </div>
+  <div class="flex min-w-0 max-w-full items-start gap-1" data-rise>
+    <p class="bubble mt-2 min-w-0" data-bubble>{{ barya_line }}</p>
+    <div class="w-[104px] flex-none sm:w-[140px] [&>svg]:h-auto [&>svg]:w-full">{% include "partials/barya.html" with size=140 mood=mood label="Barya, the DormWise mascot" %}</div>
+  </div>
+</div>
+
+{% if incident %}
+<section aria-label="What happened" class="grid overflow-hidden rounded-[26px] border-2 border-ink bg-card sm:grid-cols-2 lg:grid-cols-4" data-rise>
+  <div class="border-b-2 border-ink px-6 py-[22px] sm:border-r-2 lg:border-b-0">
+    <div class="text-[15px] font-semibold text-muted">Planned for {{ incident.day|date:"D" }}</div>
+    <div class="mono mt-1.5 text-[30px]">{{ incident.limit|peso }}</div>
+  </div>
+  <div class="border-b-2 border-ink px-6 py-[22px] lg:border-b-0 lg:border-r-2">
+    <div class="text-[15px] font-semibold text-muted">You spent</div>
+    <div class="mono mt-1.5 text-[30px]">{{ incident.spent|peso }}</div>
+  </div>
+  <div class="border-b-2 border-ink bg-yellow-soft px-6 py-[22px] sm:border-b-0 sm:border-r-2">
+    <div class="text-[15px] font-semibold">Over by</div>
+    <div class="mono mt-1.5 text-[30px]" data-count="{{ incident.over|plain }}">{{ incident.over|peso }}</div>
+  </div>
+  <div class="px-6 py-[22px]">
+    <div class="text-[15px] font-semibold text-muted">Left for {{ incident.days }} day{{ incident.days|pluralize }}</div>
+    <div class="mono mt-1.5 text-[30px]">{{ incident.pool|peso }}</div>
+  </div>
+</section>
+{% endif %}
+
+<section aria-labelledby="plans">
+  <h2 id="plans" class="text-[26px] font-extrabold" data-rise>{% if incident %}Choose your recovery plan{% else %}Your plan{% endif %}</h2>
+  <form method="post" action="{% url 'choose_plan' %}" data-plans>
+    {% csrf_token %}<input type="hidden" name="next" value="{% url 'recovery' %}">
+    {% if incident %}
+    <div class="mt-4 grid gap-5 md:grid-cols-2" data-rise>
+      <label class="pick">
+        <input type="radio" name="plan" value="even" {% if selected == 'even' %}checked{% endif %}>
+        <span class="plan-card">
+          <span class="text-[22px] font-extrabold">Little by little</span>
+          <span class="leading-normal text-muted">Spread the {{ incident.over|peso }} across all {{ incident.days }} days. Barely noticeable.</span>
+          <span class="mono text-[26px]">{{ budget.previews.even.figure }}</span>
+        </span>
+      </label>
+      <label class="pick">
+        <input type="radio" name="plan" value="fast" {% if selected == 'fast' %}checked{% endif %} {% if not budget.previews.fast.ok %}disabled{% endif %}>
+        <span class="plan-card">
+          <span class="text-[22px] font-extrabold">Fix it by Friday</span>
+          {% if budget.previews.fast.ok %}
+          <span class="leading-normal text-muted">Three tighter days, then back to normal.</span>
+          <span class="mono text-[26px]">{{ budget.previews.fast.figure }}</span>
+          {% else %}
+          <span class="leading-normal text-muted">Not available this time. Three tight days would dip under your {{ budget.floor|peso }} essentials floor, or there are too few days left.</span>
+          {% endif %}
+        </span>
+      </label>
+    </div>
+    {% endif %}
+
+    <div class="card mt-5" data-rise>
+      <div class="font-bold">Your next {{ stretch }} day{{ stretch|pluralize }}</div>
+      {% for name, preview in budget.previews.items %}
+      <div data-preview="{{ name }}" {% if name != selected %}hidden{% endif %}>
+        <div class="mt-3.5 grid grid-cols-[repeat(auto-fill,minmax(84px,1fr))] gap-2" data-days>
+          {% for day in preview.days %}
+          <div class="rounded-[16px] border-2 border-ink px-1.5 py-2.5 text-center {% if day.tight %}bg-yellow-soft{% elif forloop.first %}bg-yellow{% else %}bg-paper{% endif %}">
+            <div class="text-sm font-bold">{{ day.date|date:"D j" }}</div>
+            <div class="mono mt-1 text-[15px]">{{ day.amount|peso }}</div>
+          </div>
+          {% endfor %}
+        </div>
+        <p class="mt-3 text-[15px] text-muted" data-preview-note>{{ preview.note }}</p>
+      </div>
+      {% endfor %}
+      {% if incident %}
+      <div class="mt-[18px] flex flex-wrap items-center gap-3">
+        <button class="btn btn-primary btn-pop">Use this plan</button>
+        <span class="text-[15px] text-muted">You can switch plans any day before {{ budget.period.next_allowance_on|date:"M j" }}.</span>
+      </div>
+      {% endif %}
+    </div>
+  </form>
+</section>
+
+<div class="grid gap-5 md:grid-cols-2">
+  <section aria-labelledby="safe" class="card {% if safe %}card-cobalt{% else %}card-ink{% endif %} card-pop" data-rise>
+    {% if safe %}
+    <h2 id="safe" class="card-title">Essentials check: you're safe</h2>
+    <p class="mt-3 leading-[1.55] text-on-cobalt-soft">Your {{ budget.floor|peso }} daily floor for {{ stretch }} day{{ stretch|pluralize }} needs {{ floor_need|peso }}. You have {{ pool|peso }}, so no day is planned below it.</p>
+    <p class="mt-3 leading-[1.55] text-on-cobalt-soft">If that ever stops being true, you'll see a shortfall warning instead of a plan you can't follow.</p>
+    {% else %}
+    <h2 id="safe" class="card-title">Shortfall warning</h2>
+    <p class="mt-3 leading-[1.55] text-on-ink-soft">Your {{ budget.floor|peso }} daily floor for {{ stretch }} day{{ stretch|pluralize }} needs {{ floor_need|peso }}, but only {{ pool|peso }} is spendable. No plan can fix that honestly.</p>
+    <p class="mt-3 leading-[1.55] text-on-ink-soft">Lower your savings, check which bills are really due, or add extra income in Allowance.</p>
+    <a href="{% url 'allowance' %}" class="btn btn-yellow btn-sm mt-4">Open Allowance</a>
+    {% endif %}
+  </section>
+
+  <section aria-labelledby="under" class="card" data-rise>
+    <h2 id="under" class="card-title">When you spend less</h2>
+    <p class="mt-2.5 leading-normal text-muted">What should happen to money left over at the end of a day?</p>
+    <form method="post" role="group" aria-label="Leftover money" class="mt-4 flex flex-col gap-2.5" data-autosubmit>
+      {% csrf_token %}
+      <label class="pick"><input type="radio" name="leftover_rule" value="roll" {% if profile.leftover_rule == 'roll' %}checked{% endif %}>
+        <span class="option"><span class="font-extrabold">Roll it forward</span><span class="text-[15px] text-muted">Spread it across the remaining days.</span></span></label>
+      <label class="pick"><input type="radio" name="leftover_rule" value="save" {% if profile.leftover_rule == 'save' %}checked{% endif %}>
+        <span class="option"><span class="font-extrabold">Move it to savings</span><span class="text-[15px] text-muted">Keep your daily limit the same and save the rest.</span></span></label>
+      <noscript><button class="btn btn-dark btn-sm self-start">Save</button></noscript>
+    </form>
+  </section>
+</div>
+{% endblock %}

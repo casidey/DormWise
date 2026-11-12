@@ -1,0 +1,84 @@
+{% extends "app_base.html" %}
+{% load money %}
+{% block title %}Bills and payments | DormWise{% endblock %}
+{% block content %}
+<div class="flex flex-wrap items-center justify-between gap-4">
+  <h1 class="page-title" data-rise>Bills and payments</h1>
+  <a href="#new-bill" class="btn" data-open="#new-bill">Add a bill</a>
+</div>
+
+{% if pending %}
+<section aria-labelledby="conf" class="card card-cobalt card-pop !rounded-[28px]" data-rise>
+  <h2 id="conf" class="card-title">Needs your confirmation</h2>
+  {% for repayment in pending %}
+  <div class="mt-3.5 flex flex-wrap items-center justify-between gap-4">
+    <p class="max-w-[56ch] text-[17px] leading-normal">{{ repayment.share.member.first_name }} says they sent you <strong>{{ repayment.amount|peso }}</strong> for {{ repayment.share.shared_expense.title }}. Did you receive it?</p>
+    <div class="flex flex-wrap gap-2.5">
+      <form method="post" action="{% url 'repayment_answer' repayment.pk 'yes' %}">{% csrf_token %}<button class="btn btn-yellow">Yes, received</button></form>
+      <form method="post" action="{% url 'repayment_answer' repayment.pk 'no' %}">{% csrf_token %}<button class="btn btn-on-cobalt">Not yet</button></form>
+    </div>
+  </div>
+  {% endfor %}
+</section>
+{% endif %}
+
+<details id="new-bill" class="card" {% if show_form %}open{% endif %} data-rise>
+  <summary class="card-title cursor-pointer">Add a bill</summary>
+  <form method="post" novalidate class="mt-4 grid items-start gap-4 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_auto]">
+    {% csrf_token %}
+    {% include "partials/field.html" with field=form.title %}
+    {% include "partials/field.html" with field=form.amount %}
+    {% include "partials/field.html" with field=form.due_date %}
+    <div class="flex flex-col gap-3 lg:pt-[30px]">
+      <label class="check">{{ form.is_recurring }} {{ form.is_recurring.label }}</label>
+      <button class="btn btn-dark">Save bill</button>
+    </div>
+  </form>
+</details>
+
+<section aria-labelledby="before" data-rise>
+  <h2 id="before" class="text-2xl font-extrabold">Due before your next allowance</h2>
+  <p class="mt-1.5 text-muted">These {{ budget.set_aside|peso }} are set aside and not counted in your daily limit.</p>
+  <div class="mt-3.5 flex flex-col gap-2.5">
+    {% for row in budget.i_owe %}
+    <div class="tile flex flex-wrap items-center gap-3.5 !py-3.5 !pl-5 !pr-4" data-row>
+      <span class="flex-[1_1_220px]"><strong class="text-[17px]">Pay {{ row.to.first_name }}, {{ row.share.shared_expense.title }}</strong><br><span class="text-hint">Shared expense</span></span>
+      <span class="mono text-xl">{{ row.amount|peso }}</span>
+      <span class="tag tag-warn">Owed now</span>
+      <form method="post" action="{% url 'share_repay' row.share.pk %}">{% csrf_token %}<input type="hidden" name="next" value="{% url 'bills' %}"><button class="btn btn-dark btn-sm">Mark paid</button></form>
+    </div>
+    {% endfor %}
+    {% for row in before %}
+    <div class="tile flex flex-wrap items-center gap-3.5 !py-3.5 !pl-5 !pr-4" data-row>
+      <span class="flex-[1_1_220px]"><strong class="text-[17px]">{{ row.bill.title }}</strong><br><span class="text-hint">Due {{ row.bill.due_date|date:"M j" }}{% if row.bill.is_recurring %}, monthly{% endif %}</span></span>
+      <span class="mono text-xl">{{ row.bill.amount|peso }}</span>
+      <span class="tag {% if row.tag.urgent %}tag-warn{% endif %}">{{ row.tag.text }}</span>
+      <form method="post" action="{% url 'bill_paid' row.bill.pk %}">{% csrf_token %}<button class="btn {% if row.tag.urgent %}btn-dark{% endif %} btn-sm">Mark paid</button></form>
+      <form method="post" action="{% url 'bill_delete' row.bill.pk %}" data-confirm="Remove {{ row.bill.title }}?">{% csrf_token %}<button class="btn btn-clear btn-sm" aria-label="Remove {{ row.bill.title }}">Remove</button></form>
+    </div>
+    {% endfor %}
+    {% if not before and not budget.i_owe %}
+    <div class="card card-dashed text-center">
+      <p class="text-lg font-bold">Nothing is due before {{ budget.period.next_allowance_on|date:"M j" }}.</p>
+      <p class="mt-1 text-muted">Add rent, Wi-Fi or water and DormWise sets the money aside first.</p>
+    </div>
+    {% endif %}
+  </div>
+</section>
+
+{% if budget.bills_after %}
+<section aria-labelledby="after" class="card card-lav" data-rise>
+  <h2 id="after" class="card-title">After {{ budget.period.next_allowance_on|date:"M j" }}</h2>
+  <p class="mt-1.5 text-muted">Not set aside yet. These come out of your next allowance.</p>
+  <div class="mt-3.5 grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+    {% for bill in budget.bills_after %}
+    <div class="tile" data-row>
+      <div class="text-sm font-semibold text-muted">{{ bill.due_date|date:"M j" }}{% if bill.is_recurring %}, monthly{% endif %}</div>
+      <div class="mt-0.5 text-lg font-bold">{{ bill.title }}</div>
+      <div class="mono mt-1.5 text-[22px]">{{ bill.amount|peso }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

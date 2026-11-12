@@ -1,0 +1,9 @@
+<fieldset class="field">
+  <legend class="label mb-2.5">{{ field.label }}</legend>
+  <div class="chips">
+    {% for value, label in field.field.choices %}
+    <label class="chip"><input type="radio" name="{{ field.html_name }}" value="{{ value }}"{% if field.value|stringformat:"s" == value|stringformat:"s" %} checked{% endif %}><span>{{ label }}</span></label>
+    {% endfor %}
+  </div>
+  {% for error in field.errors %}<span class="error" role="alert">{{ error }}</span>{% endfor %}
+</fieldset>

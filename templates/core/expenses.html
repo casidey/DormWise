@@ -1,0 +1,62 @@
+{% extends "app_base.html" %}
+{% load money %}
+{% block title %}Spending | DormWise{% endblock %}
+{% block content %}
+<h1 class="page-title" data-rise>Spending</h1>
+
+<div class="flex flex-wrap items-start gap-6">
+  <div class="flex min-w-0 flex-[2_1_380px] flex-col gap-5">
+    <form id="add" method="post" novalidate aria-labelledby="addh" class="card card-pop flex flex-col gap-[18px]" data-rise
+      data-expense data-today="{{ budget.today|date:'Y-m-d' }}" data-left="{{ budget.left_today|plain }}" data-pool="{{ budget.spendable|plain }}" data-days="{{ budget.days_left }}" data-floor="{{ budget.floor|plain }}">
+      {% csrf_token %}
+      <h2 id="addh" class="card-title">Log an expense</h2>
+      {% include "core/_expense_fields.html" %}
+      <button class="btn btn-primary btn-pop btn-lg btn-block">Save expense</button>
+    </form>
+
+    <div class="flex items-center justify-between gap-3 rounded-[22px] border-2 border-ink bg-yellow px-5 py-[18px]" data-rise>
+      <span class="font-semibold">Today's limit</span>
+      <span class="mono text-[22px]">{{ budget.limit_today|peso }}</span>
+    </div>
+  </div>
+
+  <section aria-labelledby="hist" class="card min-w-0 flex-[3_1_460px]" data-rise>
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h2 id="hist" class="card-title">This allowance period</h2>
+      <nav aria-label="Filter by category" class="flex flex-wrap gap-1.5">
+        <a class="chip-link !min-h-[40px] !text-sm" href="{% url 'expenses' %}" {% if not category %}aria-current="true"{% endif %}>All</a>
+        {% for value, label in categories %}
+        <a class="chip-link !min-h-[40px] !text-sm" href="?cat={{ value }}" {% if category == value %}aria-current="true"{% endif %}>{{ label }}</a>
+        {% endfor %}
+      </nav>
+    </div>
+
+    {% for day in days %}
+    <div class="mt-6 flex justify-between text-[15px] font-bold text-muted">
+      <span>{% if day.date == budget.today %}Today, {% endif %}{{ day.date|date:"D M j" }}
+        {% if day.over > 0 %}<span class="tag tag-warn ml-1.5 text-ink">{{ day.over|peso }} over</span>{% endif %}</span>
+      <span class="mono">{{ day.total|peso }}</span>
+    </div>
+    <div class="mt-2.5 flex flex-col gap-2">
+      {% for item in day.items %}
+      <div class="row !py-2.5 !pr-3" data-row>
+        <span class="flex-[1_1_160px]"><span class="font-bold">{{ item.title }}</span> <span class="text-hint">{{ item.get_category_display }}</span></span>
+        <span class="mono text-[17px]">{{ item.amount|peso }}</span>
+        {% if item.shared_expense_id %}
+        <a href="{% url 'dorm' %}" class="tag tag-line">Dorm bill</a>
+        {% else %}
+        <a href="{% url 'expense_edit' item.pk %}" class="btn btn-sm" aria-label="Edit {{ item.title }}">Edit</a>
+        <form method="post" action="{% url 'expense_delete' item.pk %}" data-confirm="Delete {{ item.title }}?">{% csrf_token %}<button class="btn btn-clear btn-sm" aria-label="Delete {{ item.title }}">Delete</button></form>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% empty %}
+    <div class="mt-6 rounded-[20px] border-2 border-dashed border-ink p-6 text-center">
+      <p class="text-lg font-bold">{% if category %}Nothing in this category yet.{% else %}No expenses yet this period.{% endif %}</p>
+      <p class="mt-1 text-muted">Log your first one and watch today's limit count down.</p>
+    </div>
+    {% endfor %}
+  </section>
+</div>
+{% endblock %}

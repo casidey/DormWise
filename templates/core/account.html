@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{% if tab == 'login' %}Log in{% else %}Sign up{% endif %} | DormWise{% endblock %}
+{% block body %}
+<div class="flex min-h-dvh flex-wrap">
+  <section class="flex min-w-0 flex-[1_1_420px] flex-col justify-between gap-12 border-b-2 border-ink bg-cobalt px-6 py-10 text-on-cobalt sm:px-12 lg:border-b-0 lg:border-r-2">
+    <a href="{% url 'landing' %}" class="flex items-center gap-2.5 text-on-cobalt no-underline hover:text-on-cobalt">
+      {% include "partials/logo.html" %}<span class="text-xl font-extrabold">DormWise</span>
+    </a>
+    <div>
+      <h1 class="max-w-[12ch] text-[38px] font-extrabold leading-[1.02] tracking-[-0.035em] sm:text-[48px]" data-rise>Two minutes now saves you a broke Thursday.</h1>
+      <p class="mt-5 max-w-[38ch] text-lg leading-normal text-on-cobalt-soft" data-rise>Tell us your allowance and bills once. We work out what you can spend every day.</p>
+    </div>
+    <div class="max-w-[340px] -rotate-1 rounded-[22px] border-2 border-ink bg-yellow px-5 py-[18px] text-[15px] text-ink shadow-[5px_5px_0_#121633]" data-pop>
+      <div class="font-semibold">Your personal numbers stay private.</div>
+      <div class="mt-1">Roommates only see shared dorm bills.</div>
+    </div>
+  </section>
+
+  <main id="main" class="flex min-w-0 flex-[1_1_460px] items-start justify-center px-4 py-10 sm:px-8 sm:py-14">
+    <div class="card card-pop w-full max-w-[440px] !rounded-[28px] sm:!p-8" data-rise>
+      <nav aria-label="Account" class="seg">
+        <a class="flex-1 text-center" href="{% url 'signup' %}" {% if tab != 'login' %}aria-current="true"{% endif %}>Sign up</a>
+        <a class="flex-1 text-center" href="{% url 'login' %}" {% if tab == 'login' %}aria-current="true"{% endif %}>Log in</a>
+      </nav>
+
+      {% if tab == 'login' %}
+      <form method="post" action="{% url 'login' %}{% if request.GET.next %}?next={{ request.GET.next|urlencode }}{% endif %}" class="mt-6 flex flex-col gap-[18px]" novalidate>
+        {% csrf_token %}<input type="hidden" name="tab" value="login">
+        <h2 class="text-[28px] font-extrabold tracking-tight">Welcome back</h2>
+        {% include "partials/form_errors.html" with form=login_form %}
+        {% include "partials/field.html" with field=login_form.email %}
+        {% include "partials/field.html" with field=login_form.password %}
+        <a href="{% url 'password_reset' %}" class="-mt-2 text-sm font-semibold">Forgot password?</a>
+        <button class="btn btn-primary btn-pop btn-lg btn-block mt-1.5">Log in</button>
+      </form>
+      {% else %}
+      <form method="post" action="{% url 'signup' %}" class="mt-6 flex flex-col gap-[18px]" novalidate>
+        {% csrf_token %}<input type="hidden" name="tab" value="signup">
+        <h2 class="text-[28px] font-extrabold tracking-tight">Create your account</h2>
+        {% include "partials/field.html" with field=signup_form.full_name %}
+        {% include "partials/field.html" with field=signup_form.email %}
+        {% include "partials/field.html" with field=signup_form.password %}
+        <button class="btn btn-primary btn-pop btn-lg btn-block mt-1.5">Create account</button>
+      </form>
+      {% endif %}
+    </div>
+  </main>
+</div>
+{% endblock %}

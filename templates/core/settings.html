@@ -1,0 +1,63 @@
+{% extends "app_base.html" %}
+{% block title %}Profile and settings | DormWise{% endblock %}
+{% block content %}
+<h1 class="page-title" data-rise>Profile and settings</h1>
+
+<div class="flex flex-wrap items-start gap-6">
+  <div class="flex min-w-0 flex-[1_1_380px] flex-col gap-6">
+    <form method="post" novalidate aria-labelledby="prof" class="card flex flex-col gap-4" data-rise>
+      {% csrf_token %}<input type="hidden" name="action" value="profile">
+      <div class="flex items-center gap-4">
+        <span aria-hidden="true" class="avatar !h-16 !w-16 !text-[22px]">{{ profile.initials }}</span>
+        <h2 id="prof" class="card-title">Your profile</h2>
+      </div>
+      {% include "partials/field.html" with field=profile_form.full_name %}
+      {% include "partials/field.html" with field=profile_form.email %}
+      <div class="field">
+        <span class="label">Password</span>
+        <a href="{% url 'password_change' %}" class="btn btn-sm self-start">Change password</a>
+      </div>
+      <button class="btn btn-dark self-start">Save profile</button>
+    </form>
+
+    <section aria-labelledby="acct" class="card flex flex-col gap-3" data-rise>
+      <h2 id="acct" class="card-title">Account</h2>
+      <a href="{% url 'allowance' %}" class="row !py-3.5 font-bold text-ink no-underline">Allowance schedule<span aria-hidden="true">›</span></a>
+      <a href="{% url 'dorm' %}" class="row !py-3.5 font-bold text-ink no-underline">Dorm group{% if group %}, {{ group.name }}{% endif %}<span aria-hidden="true">›</span></a>
+      <div class="mt-1.5 flex flex-wrap items-start gap-2.5">
+        <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="btn btn-yellow btn-sm">Log out</button></form>
+        <details>
+          <summary class="btn btn-clear btn-sm">Delete account</summary>
+          <form method="post" class="mt-3 flex flex-col gap-3 rounded-[16px] border-2 border-ink p-4">
+            {% csrf_token %}<input type="hidden" name="action" value="delete">
+            <label class="field"><span class="label">This removes your allowance, expenses and bills for good. Type DELETE to confirm.</span>
+              <input class="input input-mono" name="confirm" autocomplete="off"></label>
+            <button class="btn btn-dark btn-sm self-start">Delete my account</button>
+          </form>
+        </details>
+      </div>
+    </section>
+  </div>
+
+  <div class="flex min-w-0 flex-[1_1_380px] flex-col gap-6">
+    <form method="post" novalidate aria-labelledby="bud" class="card card-yellow card-pop flex flex-col gap-[18px]" data-rise>
+      {% csrf_token %}<input type="hidden" name="action" value="budgeting">
+      <h2 id="bud" class="card-title">Budgeting</h2>
+      {% include "partials/field.html" with field=budgeting_form.essentials_floor %}
+      {% include "partials/chips.html" with field=budgeting_form.default_recovery_plan %}
+      {% include "partials/chips.html" with field=budgeting_form.leftover_rule %}
+      <p class="text-[15px]">Your day resets at midnight, Philippine time. Today's limit stays fixed until then.</p>
+      <button class="btn btn-dark self-start">Save budgeting</button>
+    </form>
+
+    <form method="post" aria-labelledby="rem" class="card flex flex-col gap-2" data-rise>
+      {% csrf_token %}<input type="hidden" name="action" value="alerts">
+      <h2 id="rem" class="card-title mb-1.5">Warnings and reminders</h2>
+      {% for field in alerts_form %}
+      <label class="check">{{ field }} {{ field.label }}</label>
+      {% endfor %}
+      <button class="btn btn-dark mt-2 self-start">Save reminders</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

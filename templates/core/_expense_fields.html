@@ -1,0 +1,13 @@
+{% load money %}
+{% include "partials/form_errors.html" %}
+{% include "partials/field.html" with field=form.amount %}
+{% include "partials/chips.html" with field=form.category %}
+<div class="grid gap-3.5 sm:grid-cols-[2fr_1fr]">
+  {% include "partials/field.html" with field=form.note %}
+  {% include "partials/field.html" with field=form.date %}
+</div>
+<div class="note note-ok" data-note="within" hidden>Within today's limit. <strong data-out="left"></strong> left today.</div>
+<div class="note note-warn" data-note="over" role="status" hidden>
+  This puts today <strong><span data-out="over"></span> over</strong>. From tomorrow your limit becomes <strong data-out="tomorrow"></strong>. <a href="{% url 'recovery' %}" class="font-bold">Review recovery plan</a>
+</div>
+<div class="note note-alert" data-note="short" role="alert" hidden><strong>Shortfall warning.</strong> After this, your money can't cover the {{ budget.floor|peso }} daily essentials until {{ budget.period.next_allowance_on|date:"M j" }}.</div>

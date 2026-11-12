@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }} | DormWise{% endblock %}
+{% block body %}
+<main id="main" class="wrap flex min-h-dvh items-center justify-center py-10">
+  <div class="card card-pop flex w-full max-w-[440px] flex-col gap-4" data-rise>
+    <h1 class="text-[28px] font-extrabold tracking-tight">{{ heading }}</h1>
+    <p class="text-lg text-muted">{{ body }}</p>
+    <a href="{% url 'login' %}" class="btn btn-primary btn-pop btn-lg btn-block">Log in</a>
+  </div>
+</main>
+{% endblock %}

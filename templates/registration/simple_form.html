@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }} | DormWise{% endblock %}
+{% block body %}
+<main id="main" class="wrap flex min-h-dvh items-center justify-center py-10">
+  <form method="post" class="card card-pop flex w-full max-w-[440px] flex-col gap-4" data-rise>
+    {% csrf_token %}
+    <a href="{% url 'landing' %}" class="flex items-center gap-2.5 text-ink no-underline">{% include "partials/logo.html" %}<span class="text-xl font-extrabold">DormWise</span></a>
+    <h1 class="text-[28px] font-extrabold tracking-tight">{{ heading }}</h1>
+    {% if validlink is False %}
+    <p class="note note-warn">That reset link has expired. <a href="{% url 'password_reset' %}">Ask for a new one.</a></p>
+    {% else %}
+    {% include "partials/form_errors.html" %}
+    {% for field in form %}
+    <div class="field{% if field.errors %} has-error{% endif %}">
+      <label class="label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+      <input class="input" type="{{ field.field.widget.input_type }}" name="{{ field.html_name }}" id="{{ field.id_for_label }}" required>
+      {% for error in field.errors %}<span class="error" role="alert">{{ error }}</span>{% endfor %}
+    </div>
+    {% endfor %}
+    <button class="btn btn-primary btn-pop btn-lg btn-block">{{ button }}</button>
+    {% endif %}
+    <a href="{% if user.is_authenticated %}{% url 'settings' %}{% else %}{% url 'login' %}{% endif %}" class="link">Back</a>
+  </form>
+</main>
+{% endblock %}

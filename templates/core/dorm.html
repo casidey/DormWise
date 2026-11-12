@@ -1,0 +1,119 @@
+{% extends "app_base.html" %}
+{% load money %}
+{% block title %}My Dorm | DormWise{% endblock %}
+{% block content %}
+{% if group %}
+<section aria-labelledby="grp" class="card card-cobalt card-pop flex flex-wrap items-end justify-between gap-6 !rounded-[28px] sm:!p-7" data-rise>
+  <div>
+    <h1 id="grp" class="text-[34px] font-extrabold tracking-[-0.03em] sm:text-[44px]">{{ group.name }}</h1>
+    <div class="mt-3.5 flex flex-wrap gap-2">
+      {% for member in members %}
+      <span class="rounded-full border-2 border-ink px-3.5 py-1.5 font-bold text-ink {% if member.me %}bg-yellow{% else %}bg-card{% endif %}">{{ member.name }}{% if member.me %}, you{% endif %}{% if member.creator %}, creator{% endif %}</span>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="flex flex-wrap items-center gap-3.5 rounded-[20px] border-2 border-ink bg-card px-4 py-3.5 text-ink">
+    <div>
+      <div class="text-sm font-semibold text-muted">Invite code</div>
+      <div class="mono text-2xl tracking-[0.04em]" data-code>{{ group.invite_code }}</div>
+    </div>
+    <button type="button" class="btn btn-dark btn-sm" data-copy="{{ group.invite_code }}">Copy code</button>
+  </div>
+</section>
+
+{% if owed_me or i_owe %}
+<div class="grid gap-5 md:grid-cols-2">
+  {% for row in owed_me %}
+  <div class="tile flex flex-wrap items-center justify-between gap-3 !rounded-[24px] !p-5" data-rise>
+    <div><div class="text-[15px] font-semibold text-muted">{{ row.user.first_name }} owes you</div><div class="mono text-[28px]">{{ row.amount|peso }}</div></div>
+    {% if row.pending %}<a href="{% url 'bills' %}" class="link">Waiting on your confirmation</a>
+    {% else %}<form method="post" action="{% url 'remind' row.user.pk %}">{% csrf_token %}<button class="btn btn-sm">Send a reminder</button></form>{% endif %}
+  </div>
+  {% endfor %}
+  {% for row in i_owe %}
+  <div class="tile flex flex-wrap items-center justify-between gap-3 !rounded-[24px] !bg-yellow-soft !p-5" data-rise>
+    <div><div class="text-[15px] font-semibold">You owe {{ row.user.first_name }}</div><div class="mono text-[28px]">{{ row.amount|peso }}</div></div>
+    <form method="post" action="{% url 'share_repay' row.shares.0.pk %}">{% csrf_token %}<button class="btn btn-dark btn-sm">Record repayment</button></form>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="flex flex-wrap items-start gap-6">
+  <section aria-labelledby="shared" class="card min-w-0 flex-[3_1_460px]" data-rise>
+    <h2 id="shared" class="card-title">Shared expenses</h2>
+    <div class="mt-4 flex flex-col gap-3">
+      {% for item in shared %}
+      <div class="rounded-[20px] border-2 border-ink px-[18px] py-4" data-row>
+        <div class="flex flex-wrap items-baseline justify-between gap-3">
+          <strong class="text-lg">{{ item.expense.title }}</strong>
+          <span class="mono text-xl">{{ item.expense.total|peso }}</span>
+        </div>
+        <div class="mt-1 text-hint">Paid by {{ item.payer }} on {{ item.expense.date|date:"M j" }}, {{ item.each|peso }} each</div>
+        <div class="mt-3 flex flex-wrap items-center gap-2">
+          <span class="tag {% if item.label == 'Settled' %}tag-dark{% elif item.label == 'Unpaid' %}tag-line{% else %}tag-warn tag-line{% endif %}">{{ item.label }}</span>
+          <span class="text-[15px]">{{ item.detail }}</span>
+        </div>
+        {% if item.my_unpaid_share or item.can_delete %}
+        <div class="mt-3 flex flex-wrap gap-2">
+          {% if item.my_unpaid_share %}<form method="post" action="{% url 'share_repay' item.my_unpaid_share.pk %}">{% csrf_token %}<button class="btn btn-dark btn-sm">I paid my {{ item.my_unpaid_share.amount|peso }}</button></form>{% endif %}
+          {% if item.can_delete %}<form method="post" action="{% url 'shared_delete' item.expense.pk %}" data-confirm="Delete {{ item.expense.title }} for everyone?">{% csrf_token %}<button class="btn btn-clear btn-sm">Delete</button></form>{% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="rounded-[20px] border-2 border-dashed border-ink p-6 text-center">
+        <p class="text-lg font-bold">No shared expenses yet.</p>
+        <p class="mt-1 text-muted">Paid the electricity or groceries? Split it and everyone sees their share.</p>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <form method="post" novalidate aria-labelledby="addsh" class="card card-yellow card-pop flex min-w-0 flex-[2_1_340px] flex-col gap-4" data-rise data-split-form>
+    {% csrf_token %}<input type="hidden" name="action" value="split">
+    <h2 id="addsh" class="card-title">Split a new bill</h2>
+    {% include "partials/form_errors.html" with form=split_form %}
+    {% include "partials/field.html" with field=split_form.title %}
+    {% include "partials/field.html" with field=split_form.total %}
+    <fieldset class="field">
+      <legend class="label mb-2.5">{{ split_form.members.label }}</legend>
+      <div class="chips">
+        {% for member in members %}
+        <label class="chip"><input type="checkbox" name="{{ split_form.members.html_name }}" value="{{ member.user.pk }}" {% if not split_form.is_bound or member.user.pk|stringformat:"s" in split_form.members.value %}checked{% endif %} {% if member.me %}data-payer{% endif %}><span>{% if member.me %}You{% else %}{{ member.name }}{% endif %}</span></label>
+        {% endfor %}
+      </div>
+      {% for error in split_form.members.errors %}<span class="error" role="alert">{{ error }}</span>{% endfor %}
+    </fieldset>
+    <div class="rounded-[18px] border-2 border-ink bg-card px-4 py-3.5 leading-normal" aria-live="polite">
+      <strong data-out="share">Enter the total to see each share.</strong>
+      <span class="block text-muted" data-out="extra" hidden></span>
+    </div>
+    <button class="btn btn-primary btn-pop btn-lg btn-block">Add to {{ group.name }}</button>
+  </form>
+</div>
+{% endif %}
+
+<section aria-labelledby="join" class="card card-dashed flex flex-wrap items-end justify-between gap-4" data-rise>
+  <div class="flex-[1_1_260px]">
+    <h2 id="join" class="text-xl font-extrabold">{% if group %}Moving rooms?{% else %}Set up your dorm group{% endif %}</h2>
+    <p class="mt-1.5 text-muted">{% if group %}Join another group with its invite code. Settle your balances here first.{% else %}Join your roommates with their invite code, or start a new group and share yours.{% endif %}</p>
+  </div>
+  <div class="flex flex-wrap items-start gap-4">
+    <form method="post" novalidate class="flex flex-wrap items-end gap-2.5">
+      {% csrf_token %}<input type="hidden" name="action" value="join">
+      <div class="w-[180px]">{% include "partials/field.html" with field=join_form.code %}</div>
+      <button class="btn btn-dark {% if join_form.code.errors %}self-center{% endif %}">Join group</button>
+    </form>
+    {% if not group %}
+    <form method="post" novalidate class="flex flex-wrap items-end gap-2.5">
+      {% csrf_token %}<input type="hidden" name="action" value="create">
+      <div class="w-[180px]">{% include "partials/field.html" with field=group_form.name %}</div>
+      <button class="btn">Create group</button>
+    </form>
+    {% elif can_leave %}
+    <form method="post" class="self-end" data-confirm="Leave {{ group.name }}?">{% csrf_token %}<input type="hidden" name="action" value="leave"><button class="btn btn-clear">Leave group</button></form>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
